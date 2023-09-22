@@ -59,6 +59,7 @@ def main(override_args: Optional[Sequence[str]] = None):
     parser = argparse.ArgumentParser(
         description="Converts a mitmproxy dump file or HAR to a swagger schema."
     )
+    parser.add_argument("-c", "--encoding", help="Body encoding", default="utf-8")
     parser.add_argument(
         "-i",
         "--input",
@@ -243,16 +244,18 @@ def main(override_args: Optional[Sequence[str]] = None):
                     if content_type is None:
                         # try to parse the body as form data
                         try:
+                            if type(body) == bytes:
+                                body = body.decode(args.encoding)
                             body_val_bytes: Any = dict(
                                 urllib.parse.parse_qsl(
-                                    body, encoding="utf-8", keep_blank_values=True
+                                    body, encoding=args.encoding, keep_blank_values=True
                                 )
                             )
                             body_val = {}
                             did_find_anything = False
                             for key, value in body_val_bytes.items():
                                 did_find_anything = True
-                                body_val[key.decode("utf-8")] = value.decode("utf-8")
+                                body_val[key] = value
                             if did_find_anything:
                                 content_type = "application/x-www-form-urlencoded"
                             else:
